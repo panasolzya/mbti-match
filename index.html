@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MBTI診断</title>
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:sans-serif;
+}
+
+body{
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:radial-gradient(circle at top,#35210d,#0d0d0d 60%);
+  color:white;
+  overflow:hidden;
+}
+
+.container{
+  width:100%;
+  max-width:390px;
+  padding:16px;
+  text-align:center;
+}
+
+.title{
+  font-size:20px;
+  margin-bottom:10px;
+  opacity:0.9;
+}
+
+.toggle{
+  font-size:12px;
+  margin-bottom:10px;
+  opacity:0.8;
+}
+
+select{
+  width:100%;
+  padding:14px;
+  margin:6px 0;
+  border:none;
+  border-radius:12px;
+  background:#222;
+  color:white;
+}
+
+button{
+  width:100%;
+  padding:14px;
+  margin-top:10px;
+  border:none;
+  border-radius:12px;
+  font-weight:bold;
+  background:linear-gradient(90deg,#ff4343,#ff7b00);
+  color:white;
+}
+
+/* 結果 */
+.percent{
+  font-size:64px;
+  font-weight:bold;
+  margin-top:16px;
+  color:#ffd166;
+}
+
+.rank{
+  font-size:22px;
+  font-weight:bold;
+  margin-top:4px;
+}
+
+/* 4項目 */
+.box{
+  margin-top:12px;
+  font-size:13px;
+  line-height:1.6;
+  text-align:left;
+  opacity:0.9;
+}
+
+/* シェア */
+.share-btn{
+  width:100%;
+  padding:12px;
+  margin-top:12px;
+  border:none;
+  border-radius:12px;
+  background:#5865f2;
+  color:white;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="title">MBTI診断</div>
+
+  <div class="toggle">
+    <label>
+      <input type="checkbox" id="mode">
+      32タイプモード
+    </label>
+  </div>
+
+  <select id="t1"></select>
+  <select id="t2"></select>
+
+  <button onclick="calc()">診断する</button>
+
+  <div class="percent" id="percent">0%</div>
+  <div class="rank" id="rank">-</div>
+
+  <div class="box">
+    💖 恋愛：<span id="love"></span><br>
+    🤝 友情：<span id="friend"></span><br>
+    🕒 長続き：<span id="long"></span><br>
+    ⚡ 注意：<span id="warn"></span>
+  </div>
+
+  <button class="share-btn" onclick="share()">シェアする</button>
+
+</div>
+
+<script>
+
+/* ===== 基本データ ===== */
+const base = [
+"INTJ","INTP","ENTJ","ENTP",
+"INFJ","INFP","ENFJ","ENFP",
+"ISTJ","ISFJ","ESTJ","ESFJ",
+"ISTP","ISFP","ESTP","ESFP"
+];
+
+let is32 = false;
+
+/* ===== DOM ===== */
+const t1 = document.getElementById("t1");
+const t2 = document.getElementById("t2");
+const mode = document.getElementById("mode");
+
+/* ===== セレクト更新 ===== */
+function update(){
+
+let list=[];
+
+if(is32){
+  base.forEach(t=>{
+    list.push(t+"-A");
+    list.push(t+"-T");
+  });
+}else{
+  list=base;
+}
+
+t1.innerHTML="";
+t2.innerHTML="";
+
+list.forEach(v=>{
+  const o1=document.createElement("option");
+  o1.value=v;
+  o1.innerText=v;
+  t1.appendChild(o1);
+
+  const o2=document.createElement("option");
+  o2.value=v;
+  o2.innerText=v;
+  t2.appendChild(o2);
+});
+
+t1.value=list[0];
+t2.value=list[1];
+
+}
+
+mode.addEventListener("change",e=>{
+is32=e.target.checked;
+update();
+calc();
+});
+
+update();
+
+/* ===== コメントパターン ===== */
+
+const loveList = [
+"一緒にいる時間が増えやすいかも",
+"自然と気になる存在になりやすいかも",
+"気づいたら距離が近くなりやすいかも",
+"安心感が強く出やすい関係かも",
+"ゆっくり惹かれやすい組み合わせかも",
+"ふとした瞬間に意識しやすいかも",
+"無理なく惹かれやすい関係かも",
+"恋がじわっと進みやすいかも"
+];
+
+const friendList = [
+"ノリが合いやすいかも",
+"自然に仲良くなりやすいかも",
+"気を使わず話しやすい関係かも",
+"沈黙でも気まずくなりにくいかも",
+"一緒にいて楽になりやすいかも",
+"テンション感が合いやすいかも",
+"友達として安定しやすいかも",
+"距離が縮まりやすい組み合わせかも"
+];
+
+const longList = [
+"ゆっくり長続きしやすいかも",
+"安定しやすい関係かも",
+"自然体のまま続きやすいかも",
+"無理しなければ長く続きやすいかも",
+"時間とともに馴染みやすいかも",
+"関係が落ち着きやすいタイプかも",
+"じわじわ安定していくかも",
+"気楽さが長続きにつながりやすいかも"
+];
+
+const warnList = [
+"本音を少し出すと安定しやすいかも",
+"距離感のズレに注意すると良さそう",
+"期待しすぎるとすれ違いやすいかも",
+"気持ちの温度差に気づくと良さそう",
+"遠慮しすぎると噛み合いにくいかも",
+"タイミングのズレが出やすいかも",
+"言わないまま進むと誤解が出やすいかも",
+"お互いのペースを意識すると良さそう"
+];
+
+/* ===== 固定化用キャッシュ ===== */
+const cache = {};
+
+/* ===== ユーティリティ ===== */
+function pick(list){
+return list[Math.floor(Math.random()*list.length)];
+}
+
+function getKey(a,b){
+return [a,b].sort().join("-");
+}
+
+/* ===== 描画 ===== */
+function render(result){
+
+let c=0;
+let percent=document.getElementById("percent");
+
+let timer=setInterval(()=>{
+c++;
+percent.innerText=c+"%";
+if(c>=result.p) clearInterval(timer);
+},12);
+
+let r="-";
+if(result.p>=90) r="SSランク";
+else if(result.p>=80) r="Sランク";
+else if(result.p>=70) r="Aランク";
+else r="Bランク";
+
+document.getElementById("rank").innerText=r;
+
+document.getElementById("love").innerText = result.love;
+document.getElementById("friend").innerText = result.friend;
+document.getElementById("long").innerText = result.long;
+document.getElementById("warn").innerText = result.warn;
+
+}
+
+/* ===== 診断 ===== */
+function calc(){
+
+const a = t1.value;
+const b = t2.value;
+
+const key = getKey(a,b);
+
+/* 固定化 */
+if(cache[key]){
+render(cache[key]);
+return;
+}
+
+/* 初回生成 */
+let result = {
+p: Math.floor(Math.random()*40+60),
+love: pick(loveList),
+friend: pick(friendList),
+long: pick(longList),
+warn: pick(warnList)
+};
+
+cache[key]=result;
+render(result);
+
+}
+
+/* 初回 */
+calc();
+
+/* ===== シェア ===== */
+async function share(){
+
+const text =
+document.getElementById("percent").innerText + "\n" +
+document.getElementById("rank").innerText + "\n\n" +
+location.href;
+
+if(navigator.share){
+await navigator.share({text});
+}else{
+navigator.clipboard.writeText(text);
+alert("コピーしたよ");
+}
+
+}
+
+</script>
+
+</body>
+</html>
